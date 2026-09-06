@@ -17,7 +17,11 @@ A practical Kubernetes platform built around the problems that come with running
 
 ## 🧭 What this project covers
 
-This repository collects the main pieces used to build and operate a bare-metal Kubernetes platform:
+This repository is the **central architecture repository** for a modular Kubernetes platform portfolio.
+
+It documents the platform foundation and connects the specialized repositories that cover individual operational domains.
+
+The platform includes:
 
 - kubeadm-based cluster installation
 - multiple control-plane nodes
@@ -36,6 +40,62 @@ This repository collects the main pieces used to build and operate a bare-metal 
 - controlled Kubernetes upgrades
 
 The examples are sanitized. Organization names, internal addresses, domains, registry locations and credentials are never included.
+
+---
+
+## 🏛️ Platform portfolio architecture
+
+This repository is intentionally **not a monolithic implementation repository**.
+
+The platform is divided into focused repositories so that each major engineering concern can be developed, tested and demonstrated independently.
+
+```text
+                         Enterprise Kubernetes Platform
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+             Cluster Foundation   Networking         Security
+                    │                 │                 │
+                    └─────────────────┼─────────────────┘
+                                      │
+                    ┌─────────────────┼─────────────────┐
+                    │                 │                 │
+                    ▼                 ▼                 ▼
+                 Storage          GitOps         Observability
+                    │                 │                 │
+                    └─────────────────┼─────────────────┘
+                                      │
+                                      ▼
+                              Application Platform
+                                      │
+                                      ▼
+                              Upgrade Automation
+                                      │
+                                      ▼
+                               Air-Gapped Platform
+```
+
+Each specialized repository will contain the implementation for its own domain. This repository remains the **architectural entry point and system-level view**.
+
+---
+
+## 🧩 Project ecosystem
+
+| Repository | Scope |
+|---|---|
+| `enterprise-kubernetes-platform` | Central architecture and platform overview |
+| `kubernetes-production-cluster` | kubeadm, control plane, workers and cluster foundation |
+| `kubernetes-networking` | Calico, NetworkPolicy, MetalLB, ingress and egress |
+| `kubernetes-storage` | StorageClass, PV/PVC and stateful workloads |
+| `kubernetes-security` | RBAC, Pod Security and workload isolation |
+| `kubernetes-upgrade-automation` | Ansible-driven Kubernetes lifecycle and upgrades |
+| `kubernetes-airgap` | Offline packages, images, registry and deployment |
+| `kubernetes-gitops` | GitLab CI/CD, manifests and Argo CD |
+| `kubernetes-observability` | Prometheus, Grafana, Filebeat, Logstash and Elasticsearch |
+| `kubernetes-app-deployment` | Production-oriented application deployment patterns |
+
+Repository links will be added as each specialized project is created and validated.
 
 ---
 
@@ -114,6 +174,8 @@ CNI     NetworkPolicy
 ```
 
 The network layer is also where several operational considerations belong: version compatibility, policy behavior, workload connectivity and advanced networking capabilities.
+
+Detailed networking implementation will be maintained in the dedicated `kubernetes-networking` repository.
 
 ---
 
@@ -200,6 +262,8 @@ Longhorn Volume
 
 Storage is treated as part of workload design. A PVC being `Pending`, a node becoming unavailable, or a scheduling constraint can all affect the application, so these layers need to be checked together.
 
+Detailed storage implementation will be maintained in the dedicated `kubernetes-storage` repository.
+
 ---
 
 ## ⚙️ Configuration without rebuilding images
@@ -239,6 +303,8 @@ kubectl top pods -A
 Lens can be used as an additional operational UI for inspecting nodes, pods, deployments, services, events, resource usage and workload state.
 
 No real kubeconfig, certificate, API endpoint or credentials are stored in the repository.
+
+Detailed observability architecture will be maintained in the dedicated `kubernetes-observability` repository.
 
 ---
 
@@ -282,6 +348,8 @@ Validate workloads
 
 Version variables and upgrade steps are kept explicit so that the target version is easy to review before changing the cluster.
 
+The complete lifecycle automation will be maintained in `kubernetes-upgrade-automation`.
+
 ---
 
 ## 📴 Offline operation
@@ -304,6 +372,8 @@ Kubernetes
 ```
 
 The repository contains only sanitized examples. Real registry addresses, package repositories and internal infrastructure details are excluded.
+
+The complete offline deployment workflow will be maintained in `kubernetes-airgap`.
 
 ---
 
@@ -367,28 +437,24 @@ The repository will record short problem/fix notes for issues that were actually
 
 ---
 
-## 📁 Repository structure
+## 📁 Central repository structure
 
 ```text
 enterprise-kubernetes-platform/
 ├── README.md
-├── ansible/
-├── kubernetes/
-│   ├── bootstrap/
-│   ├── networking/
-│   ├── ha/
-│   ├── ingress/
-│   ├── services/
-│   ├── storage/
-│   ├── config/
-│   ├── monitoring/
-│   └── security/
-├── offline/
-├── scripts/
-└── docs/
+├── docs/
+│   ├── architecture.md
+│   ├── networking.md
+│   ├── security.md
+│   ├── storage.md
+│   ├── gitops.md
+│   └── observability.md
+├── diagrams/
+├── projects/
+└── .gitignore
 ```
 
-Files will be added only when they represent a real configuration, reusable pattern, or operational procedure from this platform.
+Implementation repositories remain independent. This repository provides the system-level architecture, documentation and cross-project relationships.
 
 ---
 
@@ -417,10 +483,23 @@ The public repository is intentionally separated from production infrastructure 
 
 ---
 
+## 🧭 Engineering principles
+
+The platform is built around these principles:
+
+1. **Separate concerns** — cluster foundation, networking, storage, security, GitOps and observability have independent ownership boundaries.
+2. **Automate repeatable work** — Ansible and GitOps reduce undocumented manual operations.
+3. **Design for restricted environments** — internet access is never treated as a prerequisite for runtime operations.
+4. **Validate every layer** — node, runtime, Kubernetes, networking, storage and workload health are checked independently.
+5. **Prefer explicit configuration** — versions, endpoints and operational assumptions should be visible and reviewable.
+6. **Keep production data out of Git** — credentials and infrastructure-specific identifiers are never committed.
+
+---
+
 <div align="center">
 
 ### ☸️ Build → Secure → Automate → Upgrade → Operate
 
-**Simple enough to maintain. Practical enough to be useful.**
+**A modular Kubernetes platform portfolio built from real operational patterns.**
 
 </div>
