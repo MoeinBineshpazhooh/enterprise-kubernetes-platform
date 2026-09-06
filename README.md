@@ -32,7 +32,7 @@ A sanitized portfolio representation of a production-oriented Kubernetes platfor
               │       ☸️ Kubernetes          │
               │                              │
               │  ┌────────┐ ┌────────┐       │
-              │  │Master 1│ │Master 2│ ...   │
+              │  │ CP-01  │ │ CP-02  │ ...   │
               │  └────────┘ └────────┘       │
               │                              │
               │  ┌────────┐ ┌────────┐       │
@@ -348,10 +348,10 @@ kubectl get networkpolicy -A
               ▼                     ▼
            ✅ Keep                 ❌ Never
               │                     │
-       fake addresses          real credentials
-       placeholders             private keys
-       example values           internal domains
-       sanitized manifests      production secrets
+       placeholders             real credentials
+       example values           private keys
+       sanitized manifests      internal domains
+       generic hostnames        production secrets
 ```
 
 Security principles represented by the project:
@@ -399,9 +399,9 @@ The repository will be populated only with configurations and procedures that re
 
 ---
 
-## 🎯 Interview Focus
+## 🧭 Technical Discussion Topics
 
-This project is designed to support practical DevOps/Platform Engineering discussions:
+This project supports practical discussions around the implementation and operational decisions behind the platform:
 
 - How do you design a multi-control-plane Kubernetes cluster?
 - What does Calico provide beyond basic pod networking?
@@ -420,9 +420,9 @@ The answers should come from the implementation and operational lessons rather t
 
 ## 🔒 Portfolio Safety
 
-This repository is intentionally sanitized. Real infrastructure names, addresses, registry endpoints, credentials, tokens, certificates, application names, and employer/project identifiers are not included.
+This repository is intentionally sanitized. Real infrastructure names, addresses, registry endpoints, credentials, tokens, certificates, application names, and organization/project identifiers are not included.
 
-No MVB, employer, internal domain, or production topic names are used.
+All examples use generic names or explicit placeholders.
 
 ---
 
