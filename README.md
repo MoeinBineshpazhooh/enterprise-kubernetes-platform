@@ -2,434 +2,425 @@
 
 # ☸️ Enterprise Kubernetes Platform
 
-### Air-Gapped Kubernetes • Network Security • High Availability • Automation
+### Kubeadm • Calico • HAProxy • Keepalived • Longhorn • Ansible
 
-**Ansible → Kubernetes → Calico → Ingress → Workloads**
+A practical Kubernetes platform built around the problems that come with running a cluster in a restricted environment.
 
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-1.34.x-326CE5?logo=kubernetes&logoColor=white)
-![Calico](https://img.shields.io/badge/Network-Calico-0099CC)
+![Calico](https://img.shields.io/badge/CNI-Calico-0099CC)
 ![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?logo=ansible&logoColor=white)
-![Deployment](https://img.shields.io/badge/Deployment-Air--Gapped-success)
-
-A sanitized portfolio representation of a production-oriented Kubernetes platform operated in a restricted environment, covering cluster lifecycle, networking, ingress, storage, security policies, and repeatable upgrades.
+![Environment](https://img.shields.io/badge/Environment-Air--Gapped-informational)
 
 </div>
 
 ---
 
-## 🧭 Architecture at a Glance
+## 🧭 What this project covers
+
+This repository collects the main pieces used to build and operate a bare-metal Kubernetes platform:
+
+- kubeadm-based cluster installation
+- multiple control-plane nodes
+- HAProxy + Keepalived for highly available Kubernetes API access
+- Calico installed through the Tigera Operator
+- NetworkPolicy and controlled workload traffic
+- Longhorn persistent storage
+- HAProxy Ingress Controller
+- ClusterIP, NodePort and LoadBalancer services
+- MetalLB for bare-metal load balancing where required
+- ConfigMaps and Secrets for environment-specific configuration
+- Metrics Server for Kubernetes resource metrics
+- Lens for day-to-day cluster inspection
+- Ansible for repeatable host and cluster operations
+- offline images, packages and Helm artifacts
+- controlled Kubernetes upgrades
+
+The examples are sanitized. Organization names, internal addresses, domains, registry locations and credentials are never included.
+
+---
+
+## 🏗️ Platform layout
 
 ```text
-                         🧑‍💻 Automation
-                              │
-                              ▼
-                       ┌─────────────┐
-                       │   Ansible   │
-                       └──────┬──────┘
-                              │
-                              ▼
-              ┌──────────────────────────────┐
-              │       ☸️ Kubernetes          │
-              │                              │
-              │  ┌────────┐ ┌────────┐       │
-              │  │ CP-01  │ │ CP-02  │ ...   │
-              │  └────────┘ └────────┘       │
-              │                              │
-              │  ┌────────┐ ┌────────┐       │
-              │  │Worker  │ │Worker  │ ...   │
-              │  └────────┘ └────────┘       │
-              └──────────────┬───────────────┘
-                             │
-          ┌──────────────────┼──────────────────┐
-          ▼                  ▼                  ▼
-      🌐 Calico          🚪 Ingress         💾 Storage
-          │                  │                  │
-          ▼                  ▼                  ▼
-   NetworkPolicy       HAProxy-based       Local persistent
-   / cluster network     traffic entry         workloads
+                         Client / kubectl / Lens
+                                  │
+                                  ▼
+                         ┌─────────────────┐
+                         │   HAProxy VIP   │
+                         │   Keepalived    │
+                         └────────┬────────┘
+                                  │ :6443
+                    ┌─────────────┼─────────────┐
+                    ▼             ▼             ▼
+                  CP-01         CP-02         CP-03
+                    └─────────────┼─────────────┘
+                                  │
+                           ☸️ Kubernetes
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          ▼                       ▼                       ▼
+       🌐 Calico             🚪 HAProxy Ingress       💾 Longhorn
+          │                       │                       │
+   NetworkPolicy             Services                  PVC/PV
+          │                       │                       │
+          └───────────────────────┼───────────────────────┘
+                                  ▼
+                             Applications
 ```
 
----
-
-## 🧩 Implementation at a Glance
-
-| Capability | Implemented approach |
-|---|---|
-| ☸️ Kubernetes | Multi-control-plane cluster |
-| 🔐 CNI | Calico |
-| 🛡️ Network security | Kubernetes NetworkPolicy |
-| 🚪 Ingress | HAProxy Ingress Controller |
-| 🌐 Load balancing | MetalLB where required |
-| 💾 Storage | Local storage / host-backed persistence |
-| 🧰 Automation | Ansible |
-| 🔄 Lifecycle | kubeadm-based upgrades |
-| 📴 Environment | Air-gapped / offline capable |
-| 📦 Images | Offline image preparation / private registry |
+The HAProxy/Keepalived pair protects access to the Kubernetes API. The Kubernetes control plane remains a separate HA layer.
 
 ---
 
-## 🧠 Engineering Decisions
+## 🚀 Cluster bootstrap
 
-The platform is documented around operational decisions rather than a collection of manifests.
+The cluster is built with kubeadm rather than a pre-packaged Kubernetes distribution.
+
+Typical flow:
 
 ```text
-Production requirement
-        ↓
-Identify failure boundary
-        ↓
-Choose platform mechanism
-        ↓
-Automate repeatable work
-        ↓
-Validate independently
-        ↓
-Document the operational lesson
+Prepare nodes
+     ↓
+Install required packages
+     ↓
+Initialize first control plane
+     ↓
+Join additional control planes
+     ↓
+Join workers
+     ↓
+Install CNI
+     ↓
+Validate cluster
 ```
 
-### Why multiple control-plane nodes?
-
-To avoid making the Kubernetes control plane dependent on a single machine and to provide a foundation for control-plane availability.
-
-### Why Calico?
-
-The platform requires a production-capable CNI with NetworkPolicy support and room for advanced network controls.
-
-### Why isolate network policy?
-
-The cluster follows a restrictive networking model in which application communication is explicitly defined instead of assuming unrestricted east-west traffic.
-
-### Why Ansible?
-
-Cluster preparation and upgrade operations contain many repeatable host-level tasks. Automation reduces configuration drift and makes the operational procedure reproducible.
-
-### Why offline preparation?
-
-The target environment cannot assume internet connectivity. Images, packages, and required artifacts therefore have to be prepared before deployment.
+The repository keeps cluster-specific values outside reusable manifests and automation where possible.
 
 ---
 
-## 🛡️ Network Security Model
+## 🌐 Calico networking
+
+Calico is installed and managed through the **Tigera Operator**.
 
 ```text
-                    Cluster Network
-                          │
-             ┌────────────┴────────────┐
-             │                         │
-             ▼                         ▼
-       🚪 Ingress                  🧩 Workloads
-             │                         │
-             ▼                         ▼
-       Allowed paths            NetworkPolicy
-                                       │
-                              ┌────────┴────────┐
-                              ▼                 ▼
-                           ALLOW              DENY
-```
-
-The design uses Kubernetes NetworkPolicy as a security boundary between workloads.
-
-The principle is simple:
-
-> **Application connectivity should be intentional, observable, and restricted to the required paths.**
-
----
-
-## 🚪 Ingress & Traffic Flow
-
-```text
-External Client
+Tigera Operator
       │
       ▼
-┌──────────────┐
-│ Load Balancer│
-└──────┬───────┘
-       │
-       ▼
-┌──────────────────┐
-│ HAProxy Ingress  │
-└────────┬─────────┘
-         │
-         ▼
-     Kubernetes
-       Service
-         │
-         ▼
-        Pod
+Calico Installation
+      │
+ ┌────┴─────┐
+ ▼          ▼
+CNI     NetworkPolicy
 ```
 
-The implementation separates external traffic entry from application services and workload scheduling.
-
-MetalLB is used where an in-cluster load-balancing mechanism is required.
+The network layer is also where several operational considerations belong: version compatibility, policy behavior, workload connectivity and advanced networking capabilities.
 
 ---
 
-## 💾 Storage Strategy
+## 🛡️ NetworkPolicy
 
-The platform uses local/host-backed storage for workloads where that model is appropriate.
+The cluster uses restrictive workload communication rather than allowing every workload to communicate freely.
+
+```text
+Application A ───────► Application B
+       │                    ▲
+       │                    │
+       └─── NetworkPolicy ──┘
+
+Required traffic → ALLOW
+Unrequired traffic → DENY
+```
+
+Policies should describe the traffic an application needs, not simply open the whole namespace.
+
+---
+
+## 🚦 Kubernetes services
+
+The platform uses the normal Kubernetes service types according to the traffic requirement:
+
+```text
+ClusterIP
+   │
+   └── internal service communication
+
+NodePort
+   │
+   └── explicit node-level exposure
+
+LoadBalancer
+   │
+   └── external exposure where supported
+```
+
+For bare-metal environments, MetalLB can provide LoadBalancer behavior without depending on a cloud provider.
+
+---
+
+## 🚪 Ingress
+
+External application traffic follows a separate path from Kubernetes API traffic.
+
+```text
+External traffic
+      │
+      ▼
+Load Balancer / NodePort
+      │
+      ▼
+HAProxy Ingress Controller
+      │
+      ▼
+Kubernetes Service
+      │
+      ▼
+Pod
+```
+
+This separation makes it easier to troubleshoot whether a problem is at the external load-balancing layer, ingress layer, service layer or application layer.
+
+---
+
+## 💾 Longhorn storage
+
+Longhorn provides persistent volumes for workloads that need storage beyond the pod lifecycle.
+
+```text
+Application
+     │
+     ▼
+    PVC
+     │
+     ▼
+Longhorn Volume
+     │
+     ▼
+ Persistent Data
+```
+
+Storage is treated as part of workload design. A PVC being `Pending`, a node becoming unavailable, or a scheduling constraint can all affect the application, so these layers need to be checked together.
+
+---
+
+## ⚙️ Configuration without rebuilding images
+
+Application images should not contain environment-specific addresses.
+
+Instead:
+
+```text
+              Generic Application Image
+                         │
+                         ▼
+                    Application
+                     ▲       ▲
+                     │       │
+                ConfigMap  Secret
+                     │       │
+              non-sensitive  sensitive
+              configuration  values
+```
+
+This allows the same image to be deployed in different environments while changing configuration through Kubernetes resources.
+
+Secrets are represented only with placeholders in this repository.
+
+---
+
+## 📊 Metrics and operations
+
+Metrics Server provides Kubernetes resource metrics used for operational visibility and commands such as:
+
+```bash
+kubectl top nodes
+kubectl top pods -A
+```
+
+Lens can be used as an additional operational UI for inspecting nodes, pods, deployments, services, events, resource usage and workload state.
+
+No real kubeconfig, certificate, API endpoint or credentials are stored in the repository.
+
+---
+
+## 🧰 Ansible automation
+
+Ansible is used where host preparation and cluster lifecycle operations need to be repeatable.
+
+```text
+Ansible
+   │
+   ├── inventory
+   ├── group variables
+   ├── roles
+   └── playbooks
+          │
+          ▼
+     Cluster nodes
+```
+
+The important part is repeatability: a node should not depend on a long list of undocumented manual changes before it can become part of the platform.
+
+---
+
+## 🔄 Upgrade approach
+
+Kubernetes upgrades are handled as a controlled sequence rather than changing every node at once.
+
+```text
+Pre-check
+   ↓
+Prepare offline artifacts
+   ↓
+Control-plane upgrade
+   ↓
+Validate
+   ↓
+Worker upgrade
+   ↓
+Validate workloads
+```
+
+Version variables and upgrade steps are kept explicit so that the target version is easy to review before changing the cluster.
+
+---
+
+## 📴 Offline operation
+
+The platform was designed for environments where internet access cannot be assumed.
+
+```text
+Online preparation
+      │
+ ┌────┼──────────┐
+ ▼    ▼          ▼
+Images Packages Helm
+ └────┼──────────┘
+      ▼
+Offline transfer
+      ▼
+Restricted environment
+      ▼
+Kubernetes
+```
+
+The repository contains only sanitized examples. Real registry addresses, package repositories and internal infrastructure details are excluded.
+
+---
+
+## 🧯 Troubleshooting approach
+
+Most Kubernetes problems become easier when the traffic or resource path is followed from the outside inward.
+
+### Pod is Pending
 
 ```text
 Pod
- │
- ▼
+ ↓
+Scheduler events
+ ↓
+Node availability
+ ↓
+Taints / affinity / selectors
+ ↓
 PVC
- │
- ▼
-StorageClass
- │
- ▼
-Local / host-backed storage
-```
-
-This is deliberately documented as an implementation choice rather than presented as a universal storage recommendation.
-
-Persistent workloads must be evaluated for:
-
-- node dependency;
-- recovery requirements;
-- backup strategy;
-- scheduling constraints;
-- data durability.
-
----
-
-## 🔄 Kubernetes Upgrade Workflow
-
-One of the key operational capabilities is repeatable cluster upgrading.
-
-```text
-📦 Offline artifacts
-        │
-        ▼
-🧰 Ansible Controller
-        │
-        ▼
-🔎 Pre-flight validation
-        │
-        ▼
-☸️ Control-plane upgrade
-        │
-        ▼
-🧪 Cluster validation
-        │
-        ▼
-👷 Worker upgrade
-        │
-        ▼
-✅ Final validation
-```
-
-The automation keeps the target Kubernetes version explicit and performs the upgrade as a controlled sequence rather than manually changing nodes one by one.
-
----
-
-## 📴 Air-Gapped Deployment Model
-
-```text
-                 📴 Restricted Environment
-                          │
-          ┌───────────────┴───────────────┐
-          ▼                               ▼
-   📦 Offline packages              🐳 Container images
-          │                               │
-          └───────────────┬───────────────┘
-                          ▼
-                    🧰 Ansible
-                          │
-                          ▼
-                   ☸️ Kubernetes
-```
-
-The public repository contains only sanitized examples. Real registry endpoints, credentials, internal addresses, and environment-specific values are intentionally excluded.
-
----
-
-## 🧯 Operational Failure Boundaries
-
-```text
-Host Preparation
-      │
-      ▼
-Control Plane
-      │
-      ▼
-CNI / Networking
-      │
-      ▼
-Ingress
-      │
-      ▼
-Service
-      │
-      ▼
-Pod
-      │
-      ▼
+ ↓
 Storage
 ```
 
-When a workload fails, troubleshooting starts at the narrowest relevant boundary rather than treating Kubernetes as one large black box.
-
-### Example diagnostic order
-
-1. Node readiness
-2. Pod scheduling
-3. CNI/network connectivity
-4. Service endpoints
-5. Ingress routing
-6. Storage/PVC state
-7. Application logs
-8. NetworkPolicy restrictions
-
----
-
-## 🧰 Practical Problems Solved
-
-### Cluster upgrade automation
-
-Manual upgrades are error-prone and difficult to reproduce. The project uses Ansible to standardize preparation, version selection, upgrade sequencing, and validation.
-
-### Networking restrictions
-
-The cluster requires controlled east-west communication. NetworkPolicy provides an explicit authorization layer for workload traffic.
-
-### Ingress topology
-
-External traffic needs a predictable entry path. HAProxy Ingress and load-balancing components provide that boundary without coupling applications directly to external infrastructure.
-
-### Offline deployment
-
-Internet-dependent installation is unsuitable for the target environment. Required packages and images are staged before deployment.
-
-### Storage scheduling constraints
-
-Local storage introduces node affinity and recovery considerations. Persistent workloads therefore need to be evaluated together with scheduling and failure behavior.
-
----
-
-## 🔎 Verification Strategy
+### Application is unreachable
 
 ```text
-❶ Nodes are Ready
-        ↓
-❷ CNI is healthy
-        ↓
-❸ Core services are healthy
-        ↓
-❹ Ingress controller is Ready
-        ↓
-❺ Services have endpoints
-        ↓
-❻ Pods can communicate as designed
-        ↓
-❼ PVCs bind successfully
-        ↓
-❽ Application traffic succeeds
+Client
+ ↓
+Load balancer
+ ↓
+Ingress
+ ↓
+Service
+ ↓
+Endpoint
+ ↓
+Pod
+ ↓
+NetworkPolicy
 ```
 
-Typical checks:
-
-```bash
-kubectl get nodes
-kubectl get pods -A
-kubectl get svc -A
-kubectl get ingress -A
-kubectl get pvc -A
-kubectl get networkpolicy -A
-```
-
----
-
-## 🔐 Security Rules
+### Cluster upgrade issue
 
 ```text
-                 Public Repository
-                         │
-              ┌──────────┴──────────┐
-              ▼                     ▼
-           ✅ Keep                 ❌ Never
-              │                     │
-       placeholders             real credentials
-       example values           private keys
-       sanitized manifests      internal domains
-       generic hostnames        production secrets
+Version
+ ↓
+Packages
+ ↓
+Images
+ ↓
+kubeadm
+ ↓
+Control plane
+ ↓
+Node state
+ ↓
+Workloads
 ```
 
-Security principles represented by the project:
-
-- least-privilege workload communication;
-- restricted network paths;
-- external secrets kept outside Git;
-- offline artifact preparation;
-- explicit cluster access boundaries.
+The repository will record short problem/fix notes for issues that were actually encountered instead of turning every component into a long tutorial.
 
 ---
 
-## 📁 Repository Roadmap
+## 📁 Repository structure
 
 ```text
 enterprise-kubernetes-platform/
-│
 ├── README.md
 ├── ansible/
-│   ├── inventory/
-│   ├── roles/
-│   └── playbooks/
-│
 ├── kubernetes/
-│   ├── cluster/
+│   ├── bootstrap/
 │   ├── networking/
+│   ├── ha/
 │   ├── ingress/
+│   ├── services/
 │   ├── storage/
+│   ├── config/
+│   ├── monitoring/
 │   └── security/
-│
 ├── offline/
-│   ├── packages/
-│   └── images/
-│
 ├── scripts/
 └── docs/
-    ├── architecture.md
-    ├── upgrades.md
-    ├── networking.md
-    ├── storage.md
-    └── troubleshooting.md
 ```
 
-The repository will be populated only with configurations and procedures that reflect the actual implementation.
+Files will be added only when they represent a real configuration, reusable pattern, or operational procedure from this platform.
 
 ---
 
-## 🧭 Technical Discussion Topics
+## 🔐 Sanitization rule
 
-This project supports practical discussions around the implementation and operational decisions behind the platform:
+Before anything is committed, check for:
 
-- How do you design a multi-control-plane Kubernetes cluster?
-- What does Calico provide beyond basic pod networking?
-- How do NetworkPolicies change the cluster security model?
-- How do you troubleshoot a Pod stuck in `Pending`?
-- How do you troubleshoot an ingress path that returns no application response?
-- What are the risks of local persistent storage?
-- How do you perform a kubeadm upgrade safely?
-- How do you upgrade an air-gapped Kubernetes cluster?
-- How do you prepare images and packages without internet access?
-- How do you validate a cluster after an upgrade?
+```text
+❌ organization names
+❌ internal domains
+❌ real IP addresses / CIDRs
+❌ internal hostnames
+❌ registry addresses
+❌ application names
+❌ usernames
+❌ passwords / tokens
+❌ private keys / certificates
+❌ internal repository paths
 
-The answers should come from the implementation and operational lessons rather than generic Kubernetes theory.
+✅ generic names
+✅ placeholders
+✅ fake example values
+```
 
----
-
-## 🔒 Portfolio Safety
-
-This repository is intentionally sanitized. Real infrastructure names, addresses, registry endpoints, credentials, tokens, certificates, application names, and organization/project identifiers are not included.
-
-All examples use generic names or explicit placeholders.
+The public repository is intentionally separated from production infrastructure data.
 
 ---
 
 <div align="center">
 
-### 🧰 Ansible → ☸️ Kubernetes → 🛡️ Calico → 🚪 Ingress → 📦 Workloads
+### ☸️ Build → Secure → Automate → Upgrade → Operate
 
-**Automated. Restricted. Repeatable. Operationally explainable.**
+**Simple enough to maintain. Practical enough to be useful.**
 
 </div>
