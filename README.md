@@ -1,505 +1,417 @@
 <div align="center">
+  <img src="https://github.com/MoeinBineshpazhooh.png?size=160" width="120" alt="Moein Bineshpazhooh" />
+  <h1>☸️ Enterprise Kubernetes & DevOps Platform</h1>
+  <p><strong>On-Prem Kubernetes • Networking • Storage • Security • GitOps • Observability • Kafka</strong></p>
+</div>
 
-# ☸️ Enterprise Kubernetes Platform
+<div align="center">
 
-### Kubeadm • Calico • HAProxy • Keepalived • Longhorn • Ansible
-
-A practical Kubernetes platform built around the problems that come with running a cluster in a restricted environment.
-
-![Kubernetes](https://img.shields.io/badge/Kubernetes-1.34.x-326CE5?logo=kubernetes&logoColor=white)
-![Calico](https://img.shields.io/badge/CNI-Calico-0099CC)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Production-326CE5?logo=kubernetes&logoColor=white)
 ![Ansible](https://img.shields.io/badge/Automation-Ansible-EE0000?logo=ansible&logoColor=white)
-![Environment](https://img.shields.io/badge/Environment-Air--Gapped-informational)
+![GitLab](https://img.shields.io/badge/CI%2FCD-GitLab-FC6D26?logo=gitlab&logoColor=white)
+![Argo CD](https://img.shields.io/badge/GitOps-Argo%20CD-EF7B4D?logo=argo&logoColor=white)
+![Calico](https://img.shields.io/badge/Networking-Calico-0099CC)
+![Kafka](https://img.shields.io/badge/Streaming-Kafka-231F20?logo=apachekafka&logoColor=white)
+![Air-Gapped](https://img.shields.io/badge/Environment-Air--Gapped-111827)
 
 </div>
 
 ---
 
-## 🧭 What this project covers
+## 🎯 What this portfolio demonstrates
 
-This repository is the **central architecture repository** for a modular Kubernetes platform portfolio.
+This repository is the **central architecture and portfolio hub** for a practical DevOps platform built around real-world on-premises and restricted-environment operations.
 
-It documents the platform foundation and connects the specialized repositories that cover individual operational domains.
-
-The platform includes:
-
-- kubeadm-based cluster installation
-- multiple control-plane nodes
-- HAProxy + Keepalived for highly available Kubernetes API access
-- Calico installed through the Tigera Operator
-- NetworkPolicy and controlled workload traffic
-- Longhorn persistent storage
-- HAProxy Ingress Controller
-- ClusterIP, NodePort and LoadBalancer services
-- MetalLB for bare-metal load balancing where required
-- ConfigMaps and Secrets for environment-specific configuration
-- Metrics Server for Kubernetes resource metrics
-- Lens for day-to-day cluster inspection
-- Ansible for repeatable host and cluster operations
-- offline images, packages and Helm artifacts
-- controlled Kubernetes upgrades
-
-The examples are sanitized. Organization names, internal addresses, domains, registry locations and credentials are never included.
-
----
-
-## 🏛️ Platform portfolio architecture
-
-This repository is intentionally **not a monolithic implementation repository**.
-
-The platform is divided into focused repositories so that each major engineering concern can be developed, tested and demonstrated independently.
+The objective is not to present isolated technology tutorials. It is to demonstrate the complete engineering lifecycle:
 
 ```text
-                         Enterprise Kubernetes Platform
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    │                 │                 │
-                    ▼                 ▼                 ▼
-             Cluster Foundation   Networking         Security
-                    │                 │                 │
-                    └─────────────────┼─────────────────┘
-                                      │
-                    ┌─────────────────┼─────────────────┐
-                    │                 │                 │
-                    ▼                 ▼                 ▼
-                 Storage          GitOps         Observability
-                    │                 │                 │
-                    └─────────────────┼─────────────────┘
-                                      │
-                                      ▼
-                              Application Platform
-                                      │
-                                      ▼
-                              Upgrade Automation
-                                      │
-                                      ▼
-                               Air-Gapped Platform
+Infrastructure
+      ↓
+Kubernetes Cluster
+      ↓
+Networking / Storage / Security
+      ↓
+Automation / GitOps
+      ↓
+Observability / Logging
+      ↓
+Kafka / Platform Services
+      ↓
+Application Delivery
+      ↓
+Operations / Troubleshooting / Recovery
 ```
 
-Each specialized repository will contain the implementation for its own domain. This repository remains the **architectural entry point and system-level view**.
+The implementation repositories are intentionally separated by operational domain while this repository keeps the **system-level architecture and relationships** visible.
 
 ---
 
-## 🧩 Project ecosystem
+## 🧑‍💻 On-Premises Kubernetes experience
 
-| Repository | Scope |
-|---|---|
-| `enterprise-kubernetes-platform` | Central architecture and platform overview |
-| `kubernetes-production-cluster` | kubeadm, control plane, workers and cluster foundation |
-| `kubernetes-networking` | Calico, NetworkPolicy, MetalLB, ingress and egress |
-| `kubernetes-storage` | StorageClass, PV/PVC and stateful workloads |
-| `kubernetes-security` | RBAC, Pod Security and workload isolation |
-| `kubernetes-upgrade-automation` | Ansible-driven Kubernetes lifecycle and upgrades |
-| `kubernetes-airgap` | Offline packages, images, registry and deployment |
-| `kubernetes-gitops` | GitLab CI/CD, manifests and Argo CD |
-| `kubernetes-observability` | Prometheus, Grafana, Filebeat, Logstash and Elasticsearch |
-| `kubernetes-app-deployment` | Production-oriented application deployment patterns |
+The Kubernetes foundation is designed around the realities of operating clusters outside managed cloud services:
 
-Repository links will be added as each specialized project is created and validated.
+- kubeadm-based cluster bootstrap
+- multi-control-plane high availability
+- HAProxy Kubernetes API load balancing
+- Keepalived virtual IP failover
+- Ubuntu node preparation
+- containerd runtime
+- control-plane and worker lifecycle
+- CNI networking
+- NetworkPolicy enforcement
+- MetalLB / bare-metal LoadBalancer capability
+- ingress traffic management
+- persistent storage
+- Ansible-based repeatable operations
+- controlled Kubernetes upgrades
+- restricted and air-gapped environments
+- failure testing, troubleshooting and recovery
+
+The dedicated cluster repository presents this as an **On-Premises Kubernetes Deployment & Operations case study**, rather than simply a Kubernetes configuration collection.
 
 ---
 
-## 🏗️ Platform layout
+## 🏛️ Platform architecture
 
 ```text
-                         Client / kubectl / Lens
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │   HAProxy VIP   │
-                         │   Keepalived    │
-                         └────────┬────────┘
-                                  │ :6443
-                    ┌─────────────┼─────────────┐
-                    ▼             ▼             ▼
-                  CP-01         CP-02         CP-03
-                    └─────────────┼─────────────┘
-                                  │
-                           ☸️ Kubernetes
+                         Enterprise Platform
                                   │
           ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
           ▼                       ▼                       ▼
-       🌐 Calico             🚪 HAProxy Ingress       💾 Longhorn
+   Infrastructure             Platform                Operations
           │                       │                       │
-   NetworkPolicy             Services                  PVC/PV
-          │                       │                       │
-          └───────────────────────┼───────────────────────┘
+   ┌──────┼──────┐          ┌─────┼─────┐          ┌─────┼─────┐
+   ▼      ▼      ▼          ▼     ▼     ▼          ▼     ▼     ▼
+ K8s   Network Storage    GitOps Security Apps   Kafka Observability
+   │      │      │          │     │     │          │       │
+   └──────┴──────┴──────────┴─────┴─────┴──────────┴───────┘
+                                  │
                                   ▼
-                             Applications
+                       Production Operations
 ```
-
-The HAProxy/Keepalived pair protects access to the Kubernetes API. The Kubernetes control plane remains a separate HA layer.
 
 ---
 
-## 🚀 Cluster bootstrap
+## 🧩 Project ecosystem — 10 focused repositories
 
-The cluster is built with kubeadm rather than a pre-packaged Kubernetes distribution.
+| # | Repository | Primary capability |
+|---:|---|---|
+| 1 | `kubernetes-production-cluster` | **On-prem Kubernetes deployment, kubeadm and HA control plane** |
+| 2 | `kubernetes-networking` | **Calico, NetworkPolicy, MetalLB, ingress and egress** |
+| 3 | `kubernetes-storage` | **Longhorn, PV/PVC and stateful workload storage** |
+| 4 | `kubernetes-security` | **RBAC, Pod Security, isolation and workload boundaries** |
+| 5 | `kubernetes-upgrade-automation` | **Ansible + kubeadm lifecycle and upgrades** |
+| 6 | `kubernetes-airgap` | **Offline packages, images, registry and restricted deployment** |
+| 7 | `kubernetes-gitops` | **GitLab CI/CD + Argo CD + deployment automation** |
+| 8 | `kubernetes-observability` | **Prometheus, Grafana, Filebeat, Logstash and Elasticsearch** |
+| 9 | `kafka-production-platform` | **Kafka KRaft, SASL, ACLs and operational troubleshooting** |
+| 10 | `enterprise-devops-platform` | **Application delivery from source code to production** |
 
-Typical flow:
+This central repository remains the **architecture layer**, while each specialized repository provides deeper implementation evidence.
+
+---
+
+## 🔗 Portfolio relationship
 
 ```text
-Prepare nodes
-     ↓
-Install required packages
-     ↓
-Initialize first control plane
-     ↓
-Join additional control planes
-     ↓
-Join workers
-     ↓
-Install CNI
-     ↓
-Validate cluster
+                         ┌──────────────────────────────┐
+                         │ Enterprise Kubernetes       │
+                         │ & DevOps Platform            │
+                         │ CENTRAL ARCHITECTURE         │
+                         └──────────────┬───────────────┘
+                                        │
+              ┌─────────────────────────┼─────────────────────────┐
+              │                         │                         │
+              ▼                         ▼                         ▼
+      ON-PREM INFRASTRUCTURE       PLATFORM SERVICES       DELIVERY & OPS
+              │                         │                         │
+        K8s / Networking          Storage / Security       GitOps / CI-CD
+        HA / Runtime              Kafka / Observability   Applications
+        Air-Gap / Upgrades
 ```
-
-The repository keeps cluster-specific values outside reusable manifests and automation where possible.
 
 ---
 
-## 🌐 Calico networking
-
-Calico is installed and managed through the **Tigera Operator**.
+## 🚀 Deployment lifecycle
 
 ```text
-Tigera Operator
-      │
-      ▼
-Calico Installation
-      │
- ┌────┴─────┐
- ▼          ▼
-CNI     NetworkPolicy
+Physical / VM infrastructure
+          ↓
+Ubuntu preparation
+          ↓
+Containerd
+          ↓
+HAProxy + Keepalived
+          ↓
+kubeadm bootstrap
+          ↓
+Control-plane expansion
+          ↓
+Worker expansion
+          ↓
+Calico networking
+          ↓
+Storage / ingress / services
+          ↓
+Security policies
+          ↓
+Observability
+          ↓
+GitOps / application delivery
+          ↓
+Validation / failure testing
+          ↓
+Production operations
 ```
 
-The network layer is also where several operational considerations belong: version compatibility, policy behavior, workload connectivity and advanced networking capabilities.
-
-Detailed networking implementation will be maintained in the dedicated `kubernetes-networking` repository.
+This separation is important: a production platform is not just a running Kubernetes API. It is the complete operational path around the cluster.
 
 ---
 
-## 🛡️ NetworkPolicy
+## 🌐 Networking layer
 
-The cluster uses restrictive workload communication rather than allowing every workload to communicate freely.
+The networking domain covers:
 
 ```text
-Application A ───────► Application B
-       │                    ▲
-       │                    │
-       └─── NetworkPolicy ──┘
+Calico
+  ├── CNI
+  ├── NetworkPolicy
+  └── advanced networking
 
-Required traffic → ALLOW
-Unrequired traffic → DENY
+MetalLB
+  └── bare-metal LoadBalancer
+
+HAProxy Ingress
+  └── application traffic
+
+Kubernetes Services
+  ├── ClusterIP
+  ├── NodePort
+  └── LoadBalancer
 ```
 
-Policies should describe the traffic an application needs, not simply open the whole namespace.
+The dedicated networking repository will contain the implementation details and troubleshooting patterns.
 
 ---
 
-## 🚦 Kubernetes services
+## 💾 Storage layer
 
-The platform uses the normal Kubernetes service types according to the traffic requirement:
-
-```text
-ClusterIP
-   │
-   └── internal service communication
-
-NodePort
-   │
-   └── explicit node-level exposure
-
-LoadBalancer
-   │
-   └── external exposure where supported
-```
-
-For bare-metal environments, MetalLB can provide LoadBalancer behavior without depending on a cloud provider.
-
----
-
-## 🚪 Ingress
-
-External application traffic follows a separate path from Kubernetes API traffic.
-
-```text
-External traffic
-      │
-      ▼
-Load Balancer / NodePort
-      │
-      ▼
-HAProxy Ingress Controller
-      │
-      ▼
-Kubernetes Service
-      │
-      ▼
-Pod
-```
-
-This separation makes it easier to troubleshoot whether a problem is at the external load-balancing layer, ingress layer, service layer or application layer.
-
----
-
-## 💾 Longhorn storage
-
-Longhorn provides persistent volumes for workloads that need storage beyond the pod lifecycle.
+Persistent workloads are treated as an operational concern rather than an afterthought.
 
 ```text
 Application
-     │
-     ▼
-    PVC
-     │
-     ▼
-Longhorn Volume
-     │
-     ▼
- Persistent Data
-```
-
-Storage is treated as part of workload design. A PVC being `Pending`, a node becoming unavailable, or a scheduling constraint can all affect the application, so these layers need to be checked together.
-
-Detailed storage implementation will be maintained in the dedicated `kubernetes-storage` repository.
-
----
-
-## ⚙️ Configuration without rebuilding images
-
-Application images should not contain environment-specific addresses.
-
-Instead:
-
-```text
-              Generic Application Image
-                         │
-                         ▼
-                    Application
-                     ▲       ▲
-                     │       │
-                ConfigMap  Secret
-                     │       │
-              non-sensitive  sensitive
-              configuration  values
-```
-
-This allows the same image to be deployed in different environments while changing configuration through Kubernetes resources.
-
-Secrets are represented only with placeholders in this repository.
-
----
-
-## 📊 Metrics and operations
-
-Metrics Server provides Kubernetes resource metrics used for operational visibility and commands such as:
-
-```bash
-kubectl top nodes
-kubectl top pods -A
-```
-
-Lens can be used as an additional operational UI for inspecting nodes, pods, deployments, services, events, resource usage and workload state.
-
-No real kubeconfig, certificate, API endpoint or credentials are stored in the repository.
-
-Detailed observability architecture will be maintained in the dedicated `kubernetes-observability` repository.
-
----
-
-## 🧰 Ansible automation
-
-Ansible is used where host preparation and cluster lifecycle operations need to be repeatable.
-
-```text
-Ansible
-   │
-   ├── inventory
-   ├── group variables
-   ├── roles
-   └── playbooks
-          │
-          ▼
-     Cluster nodes
-```
-
-The important part is repeatability: a node should not depend on a long list of undocumented manual changes before it can become part of the platform.
-
----
-
-## 🔄 Upgrade approach
-
-Kubernetes upgrades are handled as a controlled sequence rather than changing every node at once.
-
-```text
-Pre-check
-   ↓
-Prepare offline artifacts
-   ↓
-Control-plane upgrade
-   ↓
-Validate
-   ↓
-Worker upgrade
-   ↓
-Validate workloads
-```
-
-Version variables and upgrade steps are kept explicit so that the target version is easy to review before changing the cluster.
-
-The complete lifecycle automation will be maintained in `kubernetes-upgrade-automation`.
-
----
-
-## 📴 Offline operation
-
-The platform was designed for environments where internet access cannot be assumed.
-
-```text
-Online preparation
-      │
- ┌────┼──────────┐
- ▼    ▼          ▼
-Images Packages Helm
- └────┼──────────┘
-      ▼
-Offline transfer
-      ▼
-Restricted environment
-      ▼
-Kubernetes
-```
-
-The repository contains only sanitized examples. Real registry addresses, package repositories and internal infrastructure details are excluded.
-
-The complete offline deployment workflow will be maintained in `kubernetes-airgap`.
-
----
-
-## 🧯 Troubleshooting approach
-
-Most Kubernetes problems become easier when the traffic or resource path is followed from the outside inward.
-
-### Pod is Pending
-
-```text
-Pod
- ↓
-Scheduler events
- ↓
-Node availability
- ↓
-Taints / affinity / selectors
- ↓
+     ↓
 PVC
- ↓
-Storage
+     ↓
+StorageClass
+     ↓
+Longhorn
+     ↓
+Persistent Data
 ```
 
-### Application is unreachable
-
-```text
-Client
- ↓
-Load balancer
- ↓
-Ingress
- ↓
-Service
- ↓
-Endpoint
- ↓
-Pod
- ↓
-NetworkPolicy
-```
-
-### Cluster upgrade issue
-
-```text
-Version
- ↓
-Packages
- ↓
-Images
- ↓
-kubeadm
- ↓
-Control plane
- ↓
-Node state
- ↓
-Workloads
-```
-
-The repository will record short problem/fix notes for issues that were actually encountered instead of turning every component into a long tutorial.
+The storage project will demonstrate provisioning, scheduling interactions, failure behavior and recovery considerations.
 
 ---
 
-## 📁 Central repository structure
+## 🛡️ Security layer
 
-```text
-enterprise-kubernetes-platform/
-├── README.md
-├── docs/
-│   ├── architecture.md
-│   ├── networking.md
-│   ├── security.md
-│   ├── storage.md
-│   ├── gitops.md
-│   └── observability.md
-├── diagrams/
-├── projects/
-└── .gitignore
-```
+Security is built around explicit boundaries:
 
-Implementation repositories remain independent. This repository provides the system-level architecture, documentation and cross-project relationships.
+- RBAC
+- least-privilege access
+- namespace and workload isolation
+- Pod Security controls
+- NetworkPolicy
+- Secret handling
+- separation of production values from public source code
+
+No production credentials, private keys, real internal addresses or sensitive infrastructure identifiers belong in these repositories.
 
 ---
 
-## 🔐 Sanitization rule
+## ⚙️ Automation & lifecycle
 
-Before anything is committed, check for:
+Ansible is used for repeatable infrastructure and cluster operations, while kubeadm provides explicit Kubernetes lifecycle control.
 
 ```text
-❌ organization names
-❌ internal domains
-❌ real IP addresses / CIDRs
-❌ internal hostnames
-❌ registry addresses
-❌ application names
-❌ usernames
-❌ passwords / tokens
-❌ private keys / certificates
-❌ internal repository paths
-
-✅ generic names
-✅ placeholders
-✅ fake example values
+Inventory
+   ↓
+Variables
+   ↓
+Roles
+   ↓
+Playbooks
+   ↓
+Node preparation / lifecycle
+   ↓
+Validation
 ```
 
-The public repository is intentionally separated from production infrastructure data.
+The upgrade project will focus on controlled version changes, pre-checks, offline artifacts, sequencing and post-upgrade validation.
+
+---
+
+## 🔄 GitOps & application delivery
+
+The delivery layer connects source control with Kubernetes operations:
+
+```text
+Developer
+   ↓
+GitLab
+   ↓
+CI/CD
+   ↓
+Container Image
+   ↓
+Private Registry
+   ↓
+GitOps Repository
+   ↓
+Argo CD
+   ↓
+Kubernetes
+   ↓
+Application
+```
+
+The goal is a traceable deployment path rather than a manually operated production cluster.
+
+---
+
+## 📊 Observability & logging
+
+The observability domain combines metrics, dashboards and centralized logging:
+
+```text
+Applications / Nodes
+        │
+        ├──────────────► Prometheus ──► Grafana
+        │
+        └──────────────► Filebeat
+                              ↓
+                           Kafka
+                              ↓
+                          Logstash
+                              ↓
+                        Elasticsearch
+                              ↓
+                           Kibana
+```
+
+Operational troubleshooting is treated as part of the platform, including file rotation, registry state, permissions, ingestion paths and downstream indexing.
+
+---
+
+## 📨 Kafka platform
+
+Kafka is a separate platform capability covering:
+
+- KRaft architecture
+- broker/controller separation
+- SASL authentication
+- ACL-based authorization
+- service-specific identities
+- client connectivity
+- AKHQ administration
+- replication and metadata behavior
+- operational troubleshooting
+- restricted-environment deployment
+
+The objective is to demonstrate **operating Kafka as infrastructure**, not merely producing and consuming messages.
+
+---
+
+## 📴 Air-gapped engineering
+
+Restricted environments are treated as a first-class design constraint.
+
+```text
+Internet-connected preparation
+          ↓
+Packages / images / Helm / artifacts
+          ↓
+Offline transfer
+          ↓
+Private registry / local repository
+          ↓
+Air-gapped cluster
+          ↓
+Installation / upgrade / operations
+```
+
+This approach applies across Kubernetes, container runtime, observability and Kafka components.
+
+---
+
+## 🧯 Operational problem-solving
+
+The portfolio will emphasize actual engineering behavior:
+
+```text
+Symptom
+  ↓
+Observe
+  ↓
+Isolate the layer
+  ↓
+Validate assumptions
+  ↓
+Change one boundary
+  ↓
+Re-test
+  ↓
+Document root cause
+  ↓
+Automate prevention
+```
+
+This is intentionally different from presenting only successful deployment commands.
+
+---
+
+## 🔐 Public repository hygiene
+
+All public examples follow a strict sanitization model:
+
+```text
+❌ Real credentials
+❌ Tokens / private keys
+❌ Internal domains
+❌ Real production IPs
+❌ Internal registry addresses
+❌ Organization-specific identifiers
+❌ Private application names
+
+✅ Generic hostnames
+✅ Placeholders
+✅ Fake example values
+✅ Reusable architecture
+✅ Sanitized operational lessons
+```
 
 ---
 
 ## 🧭 Engineering principles
 
-The platform is built around these principles:
-
-1. **Separate concerns** — cluster foundation, networking, storage, security, GitOps and observability have independent ownership boundaries.
-2. **Automate repeatable work** — Ansible and GitOps reduce undocumented manual operations.
-3. **Design for restricted environments** — internet access is never treated as a prerequisite for runtime operations.
-4. **Validate every layer** — node, runtime, Kubernetes, networking, storage and workload health are checked independently.
-5. **Prefer explicit configuration** — versions, endpoints and operational assumptions should be visible and reviewable.
-6. **Keep production data out of Git** — credentials and infrastructure-specific identifiers are never committed.
+1. **Infrastructure first** — establish a reliable foundation before layering platform services.
+2. **High availability by design** — remove avoidable single points of failure.
+3. **Automation over repetition** — encode repeatable operations in Ansible and GitOps.
+4. **Explicit lifecycle management** — make versions, dependencies and upgrade sequences reviewable.
+5. **Layered troubleshooting** — isolate failures before changing multiple components.
+6. **Offline awareness** — do not assume unrestricted internet connectivity.
+7. **Operational evidence** — document validation, failure scenarios and recovery paths.
+8. **Security by boundary** — keep access, traffic and configuration explicitly controlled.
+9. **Portfolio modularity** — each repository demonstrates one meaningful engineering capability.
 
 ---
 
 <div align="center">
 
-### ☸️ Build → Secure → Automate → Upgrade → Operate
+### ☸️ Build → Secure → Automate → Observe → Deliver → Operate
 
-**A modular Kubernetes platform portfolio built from real operational patterns.**
+**A modular DevOps portfolio built around real on-premises infrastructure experience.**
 
 </div>
